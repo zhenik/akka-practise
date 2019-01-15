@@ -17,6 +17,8 @@ import java.util.stream.IntStream;
 
 /**
  * Simple back-pressure example using akka-streams
+ *
+ * Presentation: https://github.com/sysco-middleware/ideas/files/2759050/reactive-patterns-ougn18.pdf
  * */
 public class BackPressureExample {
     public static void main(String[] args) {
