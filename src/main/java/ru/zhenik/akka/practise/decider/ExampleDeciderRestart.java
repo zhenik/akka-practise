@@ -27,11 +27,13 @@ public class ExampleDeciderRestart {
 
         final Function<Throwable, Supervision.Directive> decider = exc -> {
             if (exc instanceof IllegalArgumentException)
+                // reset state
                 return Supervision.restart();
             else
                 return Supervision.stop();
         };
         final Flow<Integer, Integer, NotUsed> flow = Flow.of(Integer.class)
+                // scan emmit 0 first
                 .scan(0, (acc, elem) -> {
                     if (elem < 0) throw new IllegalArgumentException("negative not allowed");
                     else return acc + elem;
