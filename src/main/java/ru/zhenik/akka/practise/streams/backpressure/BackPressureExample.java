@@ -1,5 +1,6 @@
 package ru.zhenik.akka.practise.streams.backpressure;
 
+import akka.Done;
 import akka.NotUsed;
 import akka.actor.ActorSystem;
 import akka.event.Logging;
@@ -12,6 +13,9 @@ import akka.stream.javadsl.Source;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -27,14 +31,22 @@ public class BackPressureExample {
         final LoggingAdapter logger = Logging.getLogger(system, BackPressureExample.class.getName());
 
         // try different ranges, buffers and throttling params
-        final List<Integer> list = IntStream.rangeClosed(1, 11).boxed().collect(Collectors.toList());
-        final Source<Integer, NotUsed> source = Source.from(list)
+        final List<Integer> list = IntStream.rangeClosed(1, 110).boxed().collect(Collectors.toList());
+        final Source<Integer, NotUsed> source = Source.from(list);
+
+
+        final Flow<Integer, Integer, NotUsed> flowSync = Flow.of(Integer.class)
+                .map(el -> el * el)
                 .buffer(5, OverflowStrategy.backpressure())
-                .throttle(1, Duration.ofSeconds(1), 1, ThrottleMode.shaping());
+                .throttle(2, Duration.ofSeconds(1), 1, ThrottleMode.shaping());
 
-        final Flow<Integer, Integer, NotUsed> flow = Flow.of(Integer.class).map(el -> el * el);
+        final Flow<Integer, Integer, NotUsed> flowAsync = Flow.of(Integer.class)
+                .mapAsync(4, el -> CompletableFuture.completedFuture(el * el))
+                .buffer(2, OverflowStrategy.backpressure());
 
-        source.via(flow).runForeach(System.out::println, mat);
+
+        source.via(flowSync).runForeach(System.out::println, mat);
+//        source.via(flowAsync).runForeach(System.out::println, mat);
 
     }
 }
